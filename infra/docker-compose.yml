@@ -1,5 +1,6 @@
 # Hosted shared sandbox: anvil fork (private) + RPC proxy (public, blocks cheat methods).
-#   cp .env.example .env   # set ADMIN_TOKEN
+#   cp .env.example .env   # set ADMIN_TOKEN, DOMAIN, STATE_URL
+#   ./fetch-state.sh       # pull the published snapshot into ../state (else anvil backfills from public RPC)
 #   docker compose up -d
 services:
   anvil:
