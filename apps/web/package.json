@@ -1,0 +1,28 @@
+{
+  "name": "@tapebox/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Person C's browser playground: faucet, wallet, netlist editor, tapeout, eval and step on the Tapebox fork.",
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tapebox/fork": "workspace:*",
+    "@tapebox/shared": "workspace:*",
+    "next": "^16.4.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "viem": "^2.21.54"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/react": "^19.3.3",
+    "@types/react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.5"
+  }
+}

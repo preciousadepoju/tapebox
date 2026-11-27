@@ -1,7 +1,15 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
   "files": {
-    "ignore": ["**/dist/**", "**/node_modules/**", "**/.turbo/**", "**/state/**"]
+    "ignore": [
+      "**/dist/**",
+      "**/node_modules/**",
+      "**/.turbo/**",
+      "**/state/**",
+      "**/.next/**",
+      "**/next-env.d.ts",
+      "apps/web/public/landing.js"
+    ]
   },
   "formatter": {
     "indentStyle": "space",
@@ -19,5 +27,14 @@
     "rules": {
       "recommended": true
     }
-  }
+  },
+  "overrides": [
+    {
+      "include": [
+        "apps/web/components/playground/CircuitDiagram.tsx",
+        "apps/web/components/sandbox/Header.tsx"
+      ],
+      "linter": { "rules": { "a11y": { "useSemanticElements": "off" } } }
+    }
+  ]
 }

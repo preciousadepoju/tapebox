@@ -1,0 +1,182 @@
+{
+  "tool": "tapebox",
+  "schemaVersion": 1,
+  "version": "0.1.0",
+  "startedAt": "2026-12-01T10:00:00.000Z",
+  "durationMs": 4210,
+  "chain": {
+    "mode": "fork",
+    "chainId": 196,
+    "forkBlock": 77014830
+  },
+  "summary": {
+    "passed": 7,
+    "failed": 1,
+    "skipped": 0
+  },
+  "suites": [
+    {
+      "name": "half adder",
+      "circuit": "circuits/half-adder.net",
+      "circuitId": "1001",
+      "gates": {
+        "nand": 5,
+        "latch": 0
+      },
+      "cases": [
+        {
+          "name": "0 + 0",
+          "kind": "truthTable",
+          "status": "passed",
+          "durationMs": 310,
+          "inputs": {
+            "a": false,
+            "b": false
+          },
+          "expected": {
+            "sum": false,
+            "carry": false
+          },
+          "actual": {
+            "sum": false,
+            "carry": false
+          }
+        },
+        {
+          "name": "0 + 1",
+          "kind": "truthTable",
+          "status": "passed",
+          "durationMs": 290,
+          "inputs": {
+            "a": false,
+            "b": true
+          },
+          "expected": {
+            "sum": true,
+            "carry": false
+          },
+          "actual": {
+            "sum": true,
+            "carry": false
+          }
+        },
+        {
+          "name": "1 + 0",
+          "kind": "truthTable",
+          "status": "passed",
+          "durationMs": 301,
+          "inputs": {
+            "a": true,
+            "b": false
+          },
+          "expected": {
+            "sum": true,
+            "carry": false
+          },
+          "actual": {
+            "sum": true,
+            "carry": false
+          }
+        },
+        {
+          "name": "1 + 1",
+          "kind": "truthTable",
+          "status": "passed",
+          "durationMs": 288,
+          "inputs": {
+            "a": true,
+            "b": true
+          },
+          "expected": {
+            "sum": false,
+            "carry": true
+          },
+          "actual": {
+            "sum": false,
+            "carry": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "toggle",
+      "circuit": "circuits/toggle.net",
+      "circuitId": "1002",
+      "gates": {
+        "nand": 1,
+        "latch": 1
+      },
+      "cases": [
+        {
+          "name": "beat 1",
+          "kind": "beats",
+          "status": "passed",
+          "durationMs": 510,
+          "beat": 1,
+          "inputs": {
+            "t": true
+          },
+          "expected": {
+            "q": false
+          },
+          "actual": {
+            "q": false
+          },
+          "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        {
+          "name": "beat 2",
+          "kind": "beats",
+          "status": "passed",
+          "durationMs": 498,
+          "beat": 2,
+          "inputs": {
+            "t": true
+          },
+          "expected": {
+            "q": true
+          },
+          "actual": {
+            "q": true
+          },
+          "txHash": "0x2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        {
+          "name": "beat 3 (hold)",
+          "kind": "beats",
+          "status": "passed",
+          "durationMs": 505,
+          "beat": 3,
+          "inputs": {
+            "t": false
+          },
+          "expected": {
+            "q": false
+          },
+          "actual": {
+            "q": false
+          },
+          "txHash": "0x3333333333333333333333333333333333333333333333333333333333333333"
+        },
+        {
+          "name": "beat 4 (hold)",
+          "kind": "beats",
+          "status": "failed",
+          "durationMs": 520,
+          "beat": 4,
+          "inputs": {
+            "t": false
+          },
+          "expected": {
+            "q": true
+          },
+          "actual": {
+            "q": false
+          },
+          "txHash": "0x4444444444444444444444444444444444444444444444444444444444444444",
+          "message": "q: expected 1, got 0"
+        }
+      ]
+    }
+  ]
+}
