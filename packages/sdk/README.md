@@ -34,7 +34,7 @@ const sdk = createTapeboxSdk({ rpcUrl: 'http://127.0.0.1:8545', account: '0x<key
 | --- | --- | --- |
 | `tapeOut(input)` | `{ id, txHash, netlist, inputs, outputs }` | `input` is a `Circuit` (encoded + checked for you) or `{ netlist, inputs, outputs }`. Needs an account. |
 | `eval(id, inputs)` | `{ outputs: boolean[], raw: Hex }` | `inputs` as bits (`boolean[]`) or packed bytes (`Hex`). |
-| `step(id, state, inputs)` | `{ newState, outputs }` | Stateful circuits; **not in the mock yet** (LATCH pending vectors). |
+| `step(id, state, inputs)` | `{ newState, outputs }` | Stateful circuits (LATCH). Works in the mock too. |
 | `tapeoutFee()` | `bigint` | OKB wei required by `tapeOut`. |
 | `circuitInfo(id)` | `{ inputs, outputs, latches, gates }` | |
 | `getNetlist(id)` | `Hex` | |
@@ -42,6 +42,7 @@ const sdk = createTapeboxSdk({ rpcUrl: 'http://127.0.0.1:8545', account: '0x<key
 ## Status
 
 The real SDK's reads/writes use the ABIs A confirmed against mainnet and were exercised by A's
-spike (tapeout + eval of a NAND). `step()` on the real SDK forwards to the contract; the mock's
-`step()` and LATCH evaluation are stubbed until the official TAP-02 vectors land
-(see `packages/tap02/vectors/README.md`).
+spike (tapeout + eval of a NAND). `step()` on the real SDK forwards to the contract; the mock runs
+`@tapebox/tap02`'s stateful one-beat simulator, so `eval` and `step` (NAND + LATCH) give real
+answers offline — checked against the official TAP-02 vectors. The mock is single-CPU, so it cannot
+resolve REF gates (circuits that call other CPUs' circuits); taping out a REF circuit throws.
