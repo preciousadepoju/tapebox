@@ -118,8 +118,9 @@ export function checkWellFormed(c: Circuit): WellFormedError[] {
   if (!Number.isInteger(c.inputs) || c.inputs < 0) {
     errs.push({ gate: -1, message: `inputs must be a non-negative integer (got ${c.inputs})` });
   }
-  if (!Number.isInteger(c.outputs) || c.outputs < 0) {
-    errs.push({ gate: -1, message: `outputs must be a non-negative integer (got ${c.outputs})` });
+  // The spec requires at least one output (nOut in 1..2^16); nOut = 0 is ill-formed.
+  if (!Number.isInteger(c.outputs) || c.outputs < 1) {
+    errs.push({ gate: -1, message: `outputs must be at least 1 (got ${c.outputs})` });
   }
   // Outputs are the last `outputs` wires, which are exactly the gate-driven wires, so there
   // must be at least that many gates.
@@ -129,19 +130,22 @@ export function checkWellFormed(c: Circuit): WellFormedError[] {
       message: `outputs (${c.outputs}) exceeds the number of gates (${c.gates.length})`,
     });
   }
+  const total = totalWires(c);
   c.gates.forEach((g, k) => {
     if (!OP_NAMES.has(g.op)) errs.push({ gate: k, message: `unknown op ${opName(g.op)}` });
-    const out = gateOutputWire(c, k);
+    // A gate may read any earlier wire. A LATCH is the exception: it holds last beat's value,
+    // so it may reference any in-range wire, including later ones (feedback loops).
+    const limit = g.op === OP.LATCH ? total : gateOutputWire(c, k);
     for (const [name, w] of [
       ['a', g.a],
       ['b', g.b],
     ] as const) {
       if (!Number.isInteger(w) || w < 0 || w > MAX_WIRE) {
         errs.push({ gate: k, message: `wire ${name}=${w} out of range 0..${MAX_WIRE}` });
-      } else if (w >= out) {
+      } else if (w >= limit) {
         errs.push({
           gate: k,
-          message: `references wire ${name}=${w}, which is not defined before this gate's output wire ${out} (no forward references)`,
+          message: `references wire ${name}=${w}, which is not available before this gate's output wire ${gateOutputWire(c, k)} (no forward references)`,
         });
       }
     }

@@ -1,35 +1,22 @@
 # TAP-02 conformance vectors
 
-The encoder and one-beat simulator in this package are checked against TapeOut's **official**
-TAP-02 vectors. They are the ground truth — don't hand-write expected values when a vector exists.
+`vectors.json` is the **official** TAP-02 conformance suite, vendored verbatim from the spec repo:
 
-## How to add them
+- Source: [`TapeOutProtocol/TAPs`](https://github.com/TapeOutProtocol/TAPs) → `assets/tap-02/vectors.json`
+- Format tag: `tap-netlist-vectors/1`
+- Kept byte-for-byte as upstream (Biome is configured to ignore it), so it stays diffable against the source. Re-vendor by copying a newer `assets/tap-02/vectors.json`.
 
-1. Get `vectors.json` from the TapeOut TAPs repo (the `TAP-02` spec folder).
-2. Save it here as `packages/tap02/vectors/vectors.json`.
-3. Open `../test/vectors.test.ts` and replace the `it.todo(...)` with a loop over the file.
+`test/vectors.test.ts` runs the encoder, well-formedness check and one-beat simulator against it.
 
-`test/vectors.test.ts` auto-detects the file: with it absent the suite is skipped (so CI stays
-green), and with it present the TODO marks that the assertions still need wiring to the real shape.
+## What is covered
 
-## Expected shape (to confirm against the real file)
+- **`valid` (combinational, `nState: 0`)** — `nand`, `constants`, and `popcount8_3151` (3,151 NAND
+  gates, all 256 rows) are checked by taping-out/evaluating every truth-table row.
+- **`illFormed`** — all 8 cases must be rejected (unknown opcode, truncated record, forward
+  reference, `nOut = 0`, too few signals, REF arity/target).
+- **`packingEdgeCases`** — padding bits, extra bytes, and empty input, via LSB-first packing.
 
-Likely one of:
+## Not covered yet
 
-```jsonc
-[
-  {
-    "name": "single NAND",
-    "netlist": "0x00000002000003",   // or a gate list to encode
-    "inputs": 2,
-    "outputs": 1,
-    "eval": [
-      { "in": "0x00", "out": "0x01" },
-      { "in": "0x03", "out": "0x00" }
-    ]
-  }
-]
-```
-
-Once the shape is known, assert both directions: `encodeNetlist(gates) === netlist`, and for each
-`eval` case `packBits(evalBeat(circuit, unpackBits(in)))  === out`.
+The stateful vectors (`toggle`, `ref_with_state`) use LATCH/REF and have no truth table — they
+belong to the multi-beat `step()` path, which is still stubbed. Wire them in when `step()` lands.
