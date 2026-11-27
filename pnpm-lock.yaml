@@ -69,6 +69,18 @@ importers:
         specifier: ^2.21.54
         version: 2.58.8(typescript@5.9.3)
 
+  packages/sdk:
+    dependencies:
+      '@tapebox/shared':
+        specifier: workspace:*
+        version: link:../../shared
+      '@tapebox/tap02':
+        specifier: workspace:*
+        version: link:../tap02
+      viem:
+        specifier: ^2.21.54
+        version: 2.58.8(typescript@5.9.3)
+
   packages/tap02:
     dependencies:
       viem:
