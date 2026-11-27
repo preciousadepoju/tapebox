@@ -32,6 +32,8 @@ importers:
 
   infra: {}
 
+  packages/action: {}
+
   packages/cli:
     dependencies:
       commander:
