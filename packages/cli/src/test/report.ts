@@ -1,34 +1,8 @@
+import type { RunReport } from '@tapebox/shared';
 import pc from 'picocolors';
-import type { Hex } from 'viem';
 
-export interface CheckResult {
-  name: string;
-  expected: boolean[];
-  actual: boolean[];
-  pass: boolean;
-}
-
-export interface CaseResult {
-  name: string;
-  circuitId?: string;
-  netlist?: Hex;
-  checks: CheckResult[];
-  pass: boolean;
-  durationMs: number;
-  error?: string;
-}
-
-/** The canonical report shape. TODO: promote this to `shared/` (by review) as the report JSON schema. */
-export interface RunReport {
-  tool: 'tapebox';
-  version: string;
-  startedAt: string;
-  durationMs: number;
-  total: number;
-  passed: number;
-  failed: number;
-  cases: CaseResult[];
-}
+// The report schema is the canonical shared contract; this module only renders it.
+export type { CaseResult, CheckResult, RunReport } from '@tapebox/shared';
 
 const bits = (b: boolean[]): string => b.map((x) => (x ? 1 : 0)).join('') || '-';
 
