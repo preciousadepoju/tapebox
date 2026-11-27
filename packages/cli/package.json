@@ -1,0 +1,27 @@
+{
+  "name": "tapebox",
+  "version": "0.1.0",
+  "description": "A free X Layer mainnet fork for TapeOut builders: real contracts, free test transistors, a test runner.",
+  "type": "module",
+  "bin": {
+    "tapebox": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "execa": "^9.5.2",
+    "ora": "^8.1.1",
+    "picocolors": "^1.1.1",
+    "viem": "^2.21.54"
+  },
+  "devDependencies": {
+    "@tapebox/fork": "workspace:*",
+    "@tapebox/shared": "workspace:*"
+  }
+}

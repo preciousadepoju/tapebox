@@ -1,0 +1,17 @@
+{
+  "name": "@tapebox/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Chain config, contract addresses and ABIs shared by every Tapebox package. Changes need one reviewer.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "viem": "^2.21.54"
+  }
+}

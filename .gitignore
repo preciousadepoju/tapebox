@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.turbo/
+*.log
+.env
+.env.*
+!.env.example
+# anvil state dumps are large; publish them as release assets instead
+state/*.json

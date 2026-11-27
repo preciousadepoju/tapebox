@@ -1,0 +1,10 @@
+{
+  "name": "@tapebox/infra",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "proxy": "node proxy/server.mjs"
+  }
+}
