@@ -6,6 +6,9 @@
       "**/node_modules/**",
       "**/.turbo/**",
       "**/state/**",
+      "**/.next/**",
+      "**/next-env.d.ts",
+      "apps/web/public/landing.js",
       "**/tap02/vectors/vectors.json"
     ]
   },
@@ -25,5 +28,14 @@
     "rules": {
       "recommended": true
     }
-  }
+  },
+  "overrides": [
+    {
+      "include": [
+        "apps/web/components/playground/CircuitDiagram.tsx",
+        "apps/web/components/sandbox/Header.tsx"
+      ],
+      "linter": { "rules": { "a11y": { "useSemanticElements": "off" } } }
+    }
+  ]
 }

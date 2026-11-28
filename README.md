@@ -42,6 +42,30 @@ const client = forkClient(process.env.TAPEBOX_RPC!, { adminToken: process.env.TA
 await fund(client, address); // 100 OKB, +1000 NAND, +100 LATCH
 ```
 
+## apps/web (C)
+
+Next.js 16 app with the Tapebox landing page at `/` and the sandbox at `/app`:
+
+| Route | What it does |
+| --- | --- |
+| `/app/playground` | Netlist editor (`input` / `nand` / `latch` / `output`), live gate diagram, truth table, tapeout through the real Circuits contract (0.0013 OKB fee), `eval` with bit-packed inputs, `step` for circuits with latches |
+| `/app/faucet` | Burner wallet funding through `POST /api/faucet` (100 OKB, +1000 NAND, +100 LATCH) |
+| `/app/explorer` | Chips taped out on the fork, recent activity, latest blocks |
+| `/app/reports` | Viewer for `tapebox test` JSON reports (`?url=` or drag and drop) |
+| `/app/docs` | Quick start and netlist format |
+
+```
+cp apps/web/.env.example apps/web/.env.local   # set TAPEBOX_RPC and TAPEBOX_ADMIN_TOKEN
+pnpm tapebox up                                 # in another terminal
+pnpm --filter @tapebox/web dev                  # http://localhost:3000
+```
+
+- **Mock mode.** With `TAPEBOX_RPC` unset, the faucet route and the sandbox run in memory with the same fee and burn rules, so the UI works without a chain.
+- **Wallets.** A burner key is created in `localStorage` and signs raw transactions, which pass the public proxy. MetaMask or OKX Wallet can be used instead. Chain ID 196 is shared with real X Layer, so the app checks the wallet's block number and hash against the fork before sending anything.
+- **Faucet.** `TAPEBOX_ADMIN_TOKEN` stays on the server. Addresses are validated (checksum, no zero address), and requests are limited per address and per IP (`FAUCET_*` env vars). The limiter is in memory, so each server instance keeps its own counts; use a shared store if you run more than one.
+- **Netlist encoding.** Records drive wires in order after the inputs: NAND `00|a(3)|b(3)` (operands must be earlier wires), LATCH `01|d(3)` (4 bytes, `d` may point forward), REF `02|circuits(20)|id(8)|arg(2)` (decode only). Outputs are the last `outputs` wires, lowest first. The text compiler adds 2 routing NANDs per output when outputs are not already the last wires, and 4 NANDs per enabled latch.
+- **Build.** `dev` and `build` use `--webpack` because `shared/` and `packages/fork` import `.js` paths that point at `.ts` files, which Turbopack does not resolve yet.
+
 ## Hosted sandbox
 
 See `infra/`. On a VPS, in `infra/`:
