@@ -35,6 +35,9 @@ importers:
       '@tapebox/fork':
         specifier: workspace:*
         version: link:../../packages/fork
+      '@tapebox/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
       '@tapebox/shared':
         specifier: workspace:*
         version: link:../../shared

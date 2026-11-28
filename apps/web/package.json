@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@tapebox/fork": "workspace:*",
+    "@tapebox/sdk": "workspace:*",
     "@tapebox/shared": "workspace:*",
     "@tapebox/tap02": "workspace:*",
     "next": "^16.4.6",
