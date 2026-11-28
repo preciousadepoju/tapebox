@@ -6,7 +6,6 @@ import {
   transistorsAbi,
 } from '@tapebox/shared';
 import { type Address, type Hex, type WalletClient, parseEventLogs, zeroAddress } from 'viem';
-import { packBits, unpackBits } from './bits';
 import { publicClient } from './chain';
 import type { Circuit } from './netlist';
 import { encodeNetlist } from './netlist';
@@ -79,72 +78,6 @@ export async function tapeout(
     (l) => l.address.toLowerCase() === cpu.circuits.toLowerCase() && l.args.from === zeroAddress,
   );
   return { id: minted?.args.tokenId ?? result, hash };
-}
-
-export interface OnChainCircuit {
-  id: bigint;
-  inputs: number;
-  outputs: number;
-  latches: number;
-  gates: number;
-  netlist: Hex;
-  owner: Address | null;
-}
-
-export async function readCircuit(id: bigint): Promise<OnChainCircuit> {
-  const [info, netlist, owner] = await Promise.all([
-    publicClient.readContract({
-      address: cpu.circuits,
-      abi: circuitsAbi,
-      functionName: 'circuitInfo',
-      args: [id],
-    }),
-    publicClient.readContract({
-      address: cpu.circuits,
-      abi: circuitsAbi,
-      functionName: 'netlist',
-      args: [id],
-    }),
-    publicClient
-      .readContract({
-        address: cpu.circuits,
-        abi: circuitsAbi,
-        functionName: 'ownerOf',
-        args: [id],
-      })
-      .catch(() => null),
-  ]);
-  const [inputs, outputs, latches, gates] = info;
-  return { id, inputs, outputs, latches, gates, netlist, owner };
-}
-
-export async function evalCircuit(
-  id: bigint,
-  inputs: boolean[],
-  outputs: number,
-): Promise<boolean[]> {
-  const out = await publicClient.readContract({
-    address: cpu.circuits,
-    abi: circuitsAbi,
-    functionName: 'eval',
-    args: [id, packBits(inputs)],
-  });
-  return unpackBits(out, outputs);
-}
-
-export async function stepCircuit(
-  id: bigint,
-  state: boolean[],
-  inputs: boolean[],
-  outputs: number,
-): Promise<{ state: boolean[]; outputs: boolean[] }> {
-  const [newState, out] = await publicClient.readContract({
-    address: cpu.circuits,
-    abi: circuitsAbi,
-    functionName: 'step',
-    args: [id, packBits(state), packBits(inputs)],
-  });
-  return { state: unpackBits(newState, state.length), outputs: unpackBits(out, outputs) };
 }
 
 /** Pull a readable reason out of a viem error. */

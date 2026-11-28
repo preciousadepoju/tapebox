@@ -50,7 +50,8 @@ export function createMockSdk(opts: MockOptions = {}): TapeboxSdk {
       return { id, txHash, netlist, inputs: circuit.nIn, outputs: circuit.nOut };
     },
 
-    async eval(id, inputs) {
+    async eval(id, inputs, _opts) {
+      // The mock derives the exact output width from the circuit, so it ignores opts.outputs.
       const { circuit } = must(id);
       const bits = typeof inputs === 'string' ? unpackBits(inputs, circuit.nIn) : inputs;
       // eval == one beat from zero state (matches the on-chain view for combinational circuits).

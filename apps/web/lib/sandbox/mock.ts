@@ -1,6 +1,6 @@
 import type { Address, Hex } from 'viem';
 import { FAUCET_DRIP } from '../faucet/config';
-import { simulate } from '../netlist';
+import { countOps, simulate } from '../netlist';
 import type { Bits } from '../tnl';
 import type { Activity, Chip, Sandbox } from './types';
 
@@ -125,7 +125,13 @@ export function createMockSandbox(latencyMs = 250): Sandbox {
       };
     },
     async chips(owner) {
-      const list = [...chips.values()].map(({ gates_, ...c }) => c);
+      const list = [...chips.values()].map(({ gates_, ...c }) => ({
+        ...c,
+        inputs: gates_.inputs,
+        outputs: gates_.outputs,
+        latches: countOps(gates_.gates).latch,
+        gates: gates_.gates.length,
+      }));
       return (
         owner ? list.filter((c) => c.owner.toLowerCase() === owner.toLowerCase()) : list
       ).sort((a, b) => b.createdAt - a.createdAt);

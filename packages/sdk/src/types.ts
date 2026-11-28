@@ -47,8 +47,11 @@ export interface TapeboxSdk {
   readonly cpu: Cpu;
   /** Encode (if needed), check, and tape out a circuit. Needs a funded account. */
   tapeOut(input: NetlistInput): Promise<TapeOutResult>;
-  /** Evaluate a circuit for one beat. `inputs` may be bits or pre-packed bytes. */
-  eval(id: bigint, inputs: boolean[] | Hex): Promise<EvalResult>;
+  /**
+   * Evaluate a circuit for one beat. `inputs` may be bits or pre-packed bytes.
+   * Pass `opts.outputs` (the known output width) to skip the extra circuitInfo lookup.
+   */
+  eval(id: bigint, inputs: boolean[] | Hex, opts?: { outputs?: number }): Promise<EvalResult>;
   /** Advance a stateful circuit one beat: (state, inputs) -> (newState, outputs). */
   step(id: bigint, state: Hex, inputs: Hex): Promise<StepResult>;
   /** The fee (in OKB wei) `tapeOut` must pay. */

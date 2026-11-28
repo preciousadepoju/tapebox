@@ -16,6 +16,19 @@ describe('parseConfig', () => {
     expect(() => parseConfig({ tests: [] })).toThrow();
   });
 
+  it('accepts a stateful test with beats', () => {
+    const c = parseConfig({
+      tests: [
+        {
+          name: 'toggle',
+          circuit: { netlist: '0x01000007', inputs: 1, outputs: 1 },
+          beats: [{ state: [0], in: [1], out: [1], newState: [1] }],
+        },
+      ],
+    });
+    expect(c.tests[0].beats).toHaveLength(1);
+  });
+
   it('rejects a non-hex netlist', () => {
     expect(() =>
       parseConfig({ tests: [{ name: 'x', circuit: { netlist: 'nope', inputs: 1, outputs: 1 } }] }),

@@ -4,6 +4,7 @@ import {
   http,
   type Account,
   type Hex,
+  type Transport,
   createPublicClient,
   createWalletClient,
   parseEventLogs,
@@ -18,6 +19,8 @@ export interface CreateSdkOptions {
   cpu?: Cpu;
   /** Account for writes (`tapeOut`). A viem Account or a 0x-prefixed private key. Reads need none. */
   account?: Account | Hex;
+  /** Custom viem transport (e.g. a batching http transport). Defaults to `http(rpcUrl)`. */
+  transport?: Transport;
 }
 
 /** Normalize a NetlistInput to encoded bytes, running the well-formedness check for structured input. */
@@ -31,12 +34,11 @@ function resolveNetlist(input: NetlistInput): { netlist: Hex; inputs: number; ou
 export function createTapeboxSdk(opts: CreateSdkOptions): TapeboxSdk {
   const cpu = opts.cpu ?? DEFAULT_CPU;
   const chain = tapeboxFork(opts.rpcUrl);
-  const publicClient = createPublicClient({ chain, transport: http(opts.rpcUrl) });
+  const transport = opts.transport ?? http(opts.rpcUrl);
+  const publicClient = createPublicClient({ chain, transport });
   const account =
     typeof opts.account === 'string' ? privateKeyToAccount(opts.account) : opts.account;
-  const walletClient = account
-    ? createWalletClient({ account, chain, transport: http(opts.rpcUrl) })
-    : undefined;
+  const walletClient = account ? createWalletClient({ account, chain, transport }) : undefined;
 
   async function circuitInfo(id: bigint) {
     const [inputs, outputs, latches, gates] = await publicClient.readContract({
@@ -80,7 +82,7 @@ export function createTapeboxSdk(opts: CreateSdkOptions): TapeboxSdk {
       return { id: minted?.args.tokenId ?? result, txHash, netlist, inputs, outputs };
     },
 
-    async eval(id, inputs) {
+    async eval(id, inputs, opts) {
       const raw = typeof inputs === 'string' ? inputs : packBits(inputs);
       const out = await publicClient.readContract({
         address: cpu.circuits,
@@ -88,8 +90,9 @@ export function createTapeboxSdk(opts: CreateSdkOptions): TapeboxSdk {
         functionName: 'eval',
         args: [id, raw],
       });
-      const info = await circuitInfo(id);
-      return { outputs: unpackBits(out, info.outputs), raw: out };
+      // Skip the extra circuitInfo round-trip when the caller already knows the output width.
+      const outputs = opts?.outputs ?? (await circuitInfo(id)).outputs;
+      return { outputs: unpackBits(out, outputs), raw: out };
     },
 
     async step(id, state, inputs) {

@@ -1,12 +1,12 @@
 import { writeFile } from 'node:fs/promises';
 import { createMockSdk, createTapeboxSdk } from '@tapebox/sdk';
-import { DEFAULT_FORK_PORT } from '@tapebox/shared';
+import { DEFAULT_FORK_PORT, FORK_BLOCK, xLayer } from '@tapebox/shared';
 import type { Command } from 'commander';
 import ora from 'ora';
 import pc from 'picocolors';
 import type { Hex } from 'viem';
 import { loadConfig } from '../test/config.js';
-import { toJUnit, toJson, toMarkdown, toTerminal } from '../test/report.js';
+import { toHtml, toJUnit, toJson, toMarkdown, toTerminal } from '../test/report.js';
 import { runSuite } from '../test/runner.js';
 
 // anvil dev account #0 — `tapebox up` funds it on start. A publicly known test key; never a real one.
@@ -20,6 +20,7 @@ interface TestOpts {
   json?: string;
   md?: string;
   junit?: string;
+  html?: string;
 }
 
 export function registerTest(program: Command) {
@@ -33,6 +34,7 @@ export function registerTest(program: Command) {
     .option('--json <file>', 'write a JSON report')
     .option('--md <file>', 'write a Markdown report')
     .option('--junit <file>', 'write a JUnit XML report')
+    .option('--html <file>', 'write a self-contained HTML report')
     .action(async (o: TestOpts) => {
       const config = await loadConfig(o.config);
       const rpc = config.rpc ?? o.rpc;
@@ -43,12 +45,19 @@ export function registerTest(program: Command) {
       const spin = ora(
         o.mock ? 'Running tests (mock SDK)' : `Running tests against ${rpc}`,
       ).start();
-      const report = await runSuite(sdk, config, '0.1.0').catch((e) => {
+      const report = await runSuite(sdk, config, {
+        version: '0.1.0',
+        mode: o.mock ? 'mock' : 'fork',
+        chainId: xLayer.id,
+        forkBlock: o.mock ? undefined : Number(FORK_BLOCK),
+      }).catch((e) => {
         spin.fail('Test run failed to start');
         throw e;
       });
-      if (report.failed === 0) spin.succeed('Tests complete');
-      else spin.fail(`${report.failed} of ${report.total} failed`);
+      const { passed, failed, skipped } = report.summary;
+      const total = passed + failed + skipped;
+      if (failed === 0) spin.succeed('Tests complete');
+      else spin.fail(`${failed} of ${total} failed`);
 
       console.log(`\n${toTerminal(report)}\n`);
 
@@ -56,11 +65,14 @@ export function registerTest(program: Command) {
       if (o.json) writes.push(writeFile(o.json, toJson(report)));
       if (o.md) writes.push(writeFile(o.md, toMarkdown(report)));
       if (o.junit) writes.push(writeFile(o.junit, toJUnit(report)));
+      if (o.html) writes.push(writeFile(o.html, toHtml(report)));
       if (writes.length) {
         await Promise.all(writes);
-        console.log(pc.dim(`  wrote ${[o.json, o.md, o.junit].filter(Boolean).join(', ')}`));
+        console.log(
+          pc.dim(`  wrote ${[o.json, o.md, o.junit, o.html].filter(Boolean).join(', ')}`),
+        );
       }
 
-      if (report.failed > 0) process.exitCode = 1;
+      if (failed > 0) process.exitCode = 1;
     });
 }

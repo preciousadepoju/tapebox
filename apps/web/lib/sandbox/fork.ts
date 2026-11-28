@@ -1,7 +1,8 @@
-import { FORK_BLOCK, circuitsAbi } from '@tapebox/shared';
+import { FORK_BLOCK } from '@tapebox/shared';
 import { type Address, type Hex, formatEther, parseAbiItem, zeroAddress } from 'viem';
 import { packBits, unpackBits } from '../bits';
 import { publicClient } from '../chain';
+import { sandboxSdk } from '../sdk';
 import { cpu, readBalances, readTapeoutFee, tapeout as sendTapeout } from '../tapeout';
 import type { Bits, Compiled } from '../tnl';
 import type { Activity, Chip, Sandbox } from './types';
@@ -29,18 +30,13 @@ export function createForkSandbox(names: Map<string, string>): Sandbox {
 
   async function step(args: { circuitId: string; compiled: Compiled; inputs: Bits; state: Bits }) {
     const { compiled } = args;
-    const [newState, out] = await publicClient.readContract({
-      address: cpu.circuits,
-      abi: circuitsAbi,
-      functionName: 'step',
-      args: [
-        BigInt(args.circuitId),
-        packBits(toBits(compiled.latches, args.state)),
-        packBits(toBits(compiled.inputs, args.inputs)),
-      ],
-    });
+    const { newState, outputs } = await sandboxSdk.step(
+      BigInt(args.circuitId),
+      packBits(toBits(compiled.latches, args.state)),
+      packBits(toBits(compiled.inputs, args.inputs)),
+    );
     return {
-      outputs: fromBits(compiled.outputs, unpackBits(out, compiled.outputs.length)),
+      outputs: fromBits(compiled.outputs, unpackBits(outputs, compiled.outputs.length)),
       state: fromBits(compiled.latches, unpackBits(newState, compiled.latches.length)),
     };
   }
@@ -74,13 +70,12 @@ export function createForkSandbox(names: Map<string, string>): Sandbox {
       if (args.compiled.latches.length > 0) {
         return (await step({ ...args, state: args.state ?? {} })).outputs;
       }
-      const out = await publicClient.readContract({
-        address: cpu.circuits,
-        abi: circuitsAbi,
-        functionName: 'eval',
-        args: [BigInt(args.circuitId), packBits(toBits(args.compiled.inputs, args.inputs))],
-      });
-      return fromBits(args.compiled.outputs, unpackBits(out, args.compiled.outputs.length));
+      const { outputs } = await sandboxSdk.eval(
+        BigInt(args.circuitId),
+        toBits(args.compiled.inputs, args.inputs),
+        { outputs: args.compiled.outputs.length },
+      );
+      return fromBits(args.compiled.outputs, outputs);
     },
     step,
     async chips(owner) {
@@ -108,6 +103,20 @@ export function createForkSandbox(names: Map<string, string>): Sandbox {
           txHash: l.transactionHash as Hex,
         });
       }
+      // Enrich with each circuit's composition (inputs/outputs/latches/gates) for the explorer.
+      await Promise.all(
+        chips.map(async (c) => {
+          try {
+            const info = await sandboxSdk.circuitInfo(BigInt(c.circuitId));
+            c.inputs = info.inputs;
+            c.outputs = info.outputs;
+            c.latches = info.latches;
+            c.gates = info.gates;
+          } catch {
+            // leave the stats undefined if the read fails
+          }
+        }),
+      );
       return chips.reverse();
     },
     async activity(limit = 50) {

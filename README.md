@@ -8,6 +8,9 @@ pnpm spike          # day-1 spike: fork, fund, tape out a 1-NAND circuit, eval, 
 pnpm tapebox up     # local fork on :8545, dev accounts pre-funded
 pnpm tapebox fund 0xYourAddress
 pnpm tapebox snapshot
+
+# no chain needed — run the example circuits against the in-memory simulator:
+cd packages/cli && pnpm exec tsx src/index.ts test --mock --config tapebox.config.example.ts
 ```
 
 Requires Node 20+, pnpm and [Foundry](https://book.getfoundry.sh/getting-started/installation) (`anvil`). On Windows, use WSL or the prebuilt Windows binaries, or set `ANVIL_BIN`.
@@ -16,12 +19,14 @@ Requires Node 20+, pnpm and [Foundry](https://book.getfoundry.sh/getting-started
 
 | Folder | Owner | Holds |
 | --- | --- | --- |
-| `shared/` | everyone, by review | `src/chain.ts`, `src/addresses.ts`, `src/abis.ts` |
+| `shared/` | everyone, by review | chain config, contract addresses, ABIs, and the test-report schema |
 | `packages/fork` | A | `startFork()`, `fund()`, `dumpStateToFile()`, spike script |
-| `packages/cli` | A (`up`, `fund`, `snapshot`), B (`test`) | the `tapebox` command |
+| `packages/cli` | A (`up`, `fund`, `snapshot`), B (`test`, `inspect`) | the `tapebox` command |
 | `infra/` | A | anvil container, RPC proxy, Caddy, nightly reset |
-| `packages/tap02`, `packages/sdk`, `packages/action` | B | |
-| `apps/web` | C | |
+| `packages/tap02` | B | TAP-02 encoder, well-formedness check, one-beat simulator (NAND/LATCH/REF), `CircuitBuilder` |
+| `packages/sdk` | B | `tapeOut`/`eval`/`step` — one API on the fork and on mainnet, plus a chain-free mock |
+| `packages/action` | B | composite GitHub Action that runs `tapebox test` |
+| `apps/web` | C | Next.js landing page and sandbox playground |
 
 ## What A has established about TapeOut (X Layer, chain 196)
 
@@ -32,6 +37,69 @@ Requires Node 20+, pnpm and [Foundry](https://book.getfoundry.sh/getting-started
 - `eval(id, inputs)`: inputs are bit-packed with the LSB as input 0, and it returns bit-packed outputs. `step(id, state, inputs)` returns `(newState, outputs)`.
 - Balances use OpenZeppelin v5's namespaced ERC-1155 storage (`0x88be…4500`), which was verified against a real holder. `fund()` writes them directly and falls back to impersonating the CPU creator and transferring tokens.
 - Default sandbox CPU: #0 "OnlyTestXLayer", circuits `0x839b…574e`, transistors `0xbe0e…e26d`.
+
+## The `tapebox` CLI
+
+| Command | What it does |
+| --- | --- |
+| `tapebox up` | Start a local X Layer fork on `:8545`, pre-funding dev accounts (loads a snapshot if present) |
+| `tapebox fund <address>` | Give a wallet free OKB, NAND and LATCH |
+| `tapebox snapshot [file]` | Dump the running fork's state for fast restarts |
+| `tapebox test` | Run a `tapebox.config.ts` against a fork (or `--mock`): truth tables and stateful `beats`, reported to the terminal and `--json` / `--md` / `--junit` / `--html` |
+| `tapebox inspect [netlist]` | Decode a circuit (hex, or `--id <n>` from a fork) into its composition, with a truth table for small combinational circuits |
+
+A config is validated with zod (`packages/cli/tapebox.config.example.ts`):
+
+```ts
+export default {
+  tests: [
+    {
+      name: 'NAND',
+      circuit: { inputs: 2, outputs: 1, gates: [{ op: 0, a: 2, b: 3 }] },
+      truthTable: [{ in: [0, 0], out: [1] }, { in: [1, 1], out: [0] }],
+    },
+  ],
+};
+```
+
+## SDK and circuit builder (B)
+
+`@tapebox/sdk` — one API on the fork and on mainnet:
+
+```ts
+import { createTapeboxSdk } from '@tapebox/sdk';
+const sdk = createTapeboxSdk({ rpcUrl: 'http://127.0.0.1:8545', account: '0x<key>' });
+const { id } = await sdk.tapeOut(circuit);          // a Circuit or { netlist, inputs, outputs }
+const { outputs } = await sdk.eval(id, [true, true]);
+```
+
+`createMockSdk()` is the same interface with no chain (backed by the TAP-02 simulator), so UIs and tests run offline.
+
+`@tapebox/tap02` ships a `CircuitBuilder` so you write logic instead of netlist bytes — everything reduces to NAND:
+
+```ts
+import { CircuitBuilder } from '@tapebox/tap02';
+const b = new CircuitBuilder(2);
+const [x, y] = b.inputWires;
+const circuit = b.build([b.xor(x, y)]);             // ready for sdk.tapeOut(circuit)
+// also: and/or/not/mux, halfAdder, fullAdder, rippleAdder(a, b)
+```
+
+## Testing
+
+```
+pnpm test        # every package
+pnpm typecheck
+pnpm lint
+```
+
+The web app's live-fork path has an opt-in integration test (skipped in CI):
+
+```
+pnpm tapebox up                                            # terminal 1
+NEXT_PUBLIC_TAPEBOX_RPC=http://127.0.0.1:8545 \
+  pnpm --filter @tapebox/web test fork.integration         # terminal 2
+```
 
 ## For C: faucet
 
