@@ -44,6 +44,12 @@ run('fork sandbox against a live fork', () => {
     });
     expect(txHash).toMatch(/^0x[0-9a-fA-F]{64}$/);
 
+    // The explorer lists chips with their composition; our freshly taped-out circuit shows up.
+    const chips = await sandbox.chips(account.address);
+    const mineChip = chips.find((c) => c.circuitId === circuitId);
+    expect(mineChip?.inputs).toBe(compiled.inputs.length);
+    expect(mineChip?.gates).toBeGreaterThan(0);
+
     for (let row = 0; row < 1 << compiled.inputs.length; row++) {
       const inBits = compiled.inputs.map((_, i) => ((row >> i) & 1) === 1);
       const chain = await sandbox.eval({

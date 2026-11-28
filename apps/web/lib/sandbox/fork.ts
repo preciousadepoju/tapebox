@@ -103,6 +103,20 @@ export function createForkSandbox(names: Map<string, string>): Sandbox {
           txHash: l.transactionHash as Hex,
         });
       }
+      // Enrich with each circuit's composition (inputs/outputs/latches/gates) for the explorer.
+      await Promise.all(
+        chips.map(async (c) => {
+          try {
+            const info = await sandboxSdk.circuitInfo(BigInt(c.circuitId));
+            c.inputs = info.inputs;
+            c.outputs = info.outputs;
+            c.latches = info.latches;
+            c.gates = info.gates;
+          } catch {
+            // leave the stats undefined if the read fails
+          }
+        }),
+      );
       return chips.reverse();
     },
     async activity(limit = 50) {

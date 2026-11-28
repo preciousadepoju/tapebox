@@ -168,6 +168,12 @@ export function ExplorerPage() {
                     <div className="font-mono text-muted text-xs">
                       id {c.circuitId} · by {short(c.owner)}
                     </div>
+                    {c.gates !== undefined && (
+                      <div className="font-mono text-muted text-xs">
+                        {c.inputs}→{c.outputs} · {c.gates} gates
+                        {c.latches ? ` · ${c.latches} latch` : ''}
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
