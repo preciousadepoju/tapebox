@@ -55,6 +55,23 @@ export class CircuitBuilder {
     return this.nand(this.nand(a, n), this.nand(b, n));
   }
 
+  nor(a: number, b: number): number {
+    return this.not(this.or(a, b));
+  }
+
+  xnor(a: number, b: number): number {
+    return this.not(this.xor(a, b));
+  }
+
+  /** 1 iff every bit of `a` equals the corresponding bit of `b` (equal-width operands). */
+  equals(a: number[], b: number[]): number {
+    if (a.length !== b.length) throw new Error('equals needs equal-width operands');
+    if (a.length === 0) return ONE;
+    let acc = this.xnor(a[0], b[0]);
+    for (let i = 1; i < a.length; i++) acc = this.and(acc, this.xnor(a[i], b[i]));
+    return acc;
+  }
+
   /** 2:1 multiplexer: returns `b` when `sel` is 1, else `a`. */
   mux(sel: number, a: number, b: number): number {
     return this.or(this.and(a, this.not(sel)), this.and(b, sel));

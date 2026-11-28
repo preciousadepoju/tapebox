@@ -46,6 +46,27 @@ describe('CircuitBuilder gates (verified against the simulator)', () => {
       ([a, c]) => [a !== c],
     ));
 
+  it('nor', () =>
+    checkTruthTable(
+      2,
+      (b) => [b.nor(b.input(0), b.input(1))],
+      ([a, c]) => [!(a || c)],
+    ));
+
+  it('xnor', () =>
+    checkTruthTable(
+      2,
+      (b) => [b.xnor(b.input(0), b.input(1))],
+      ([a, c]) => [a === c],
+    ));
+
+  it('equals (3-bit comparator)', () =>
+    checkTruthTable(
+      6,
+      (b) => [b.equals([b.input(0), b.input(1), b.input(2)], [b.input(3), b.input(4), b.input(5)])],
+      (ins) => [ins[0] === ins[3] && ins[1] === ins[4] && ins[2] === ins[5]],
+    ));
+
   it('mux (sel ? b : a)', () =>
     checkTruthTable(
       3,
