@@ -173,3 +173,38 @@ export function stepBeat(
     outputs: a.slice(a.length - c.nOut).map((x) => x === 1),
   };
 }
+
+export interface NetlistSummary {
+  /** Number of records (gates) in the netlist. */
+  records: number;
+  nand: number;
+  latch: number;
+  ref: number;
+  /** Total signals: 2 constants + inputs + one per produced wire. */
+  signals: number;
+  /** True if the circuit has state (LATCH) or composition (REF). */
+  stateful: boolean;
+}
+
+/** Decode a netlist and summarize its composition (no chain needed). */
+export function summarize(netlist: Hex, nIn: number): NetlistSummary {
+  const els = decodeElements(netlist, nIn);
+  let nand = 0;
+  let latch = 0;
+  let ref = 0;
+  let produced = 0;
+  for (const e of els) {
+    if (e.op === OP.NAND) nand++;
+    else if (e.op === OP.LATCH) latch++;
+    else if (e.op === OP_REF) ref++;
+    produced += e.nOut;
+  }
+  return {
+    records: els.length,
+    nand,
+    latch,
+    ref,
+    signals: FIRST_INPUT_WIRE + nIn + produced,
+    stateful: latch > 0 || ref > 0,
+  };
+}

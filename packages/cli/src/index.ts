@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import { registerFund } from './commands/fund.js';
+import { registerInspect } from './commands/inspect.js';
 import { registerSnapshot } from './commands/snapshot.js';
 import { registerTest } from './commands/test.js';
 import { registerUp } from './commands/up.js';
@@ -15,6 +16,7 @@ registerFund(program);
 registerSnapshot(program);
 // Person B: testing
 registerTest(program);
+registerInspect(program);
 
 program.parseAsync().catch((err: unknown) => {
   console.error(err instanceof Error ? err.message : err);
