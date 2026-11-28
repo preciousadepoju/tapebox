@@ -44,4 +44,19 @@ await fund(client, address); // 100 OKB, +1000 NAND, +100 LATCH
 
 ## Hosted sandbox
 
-See `infra/`. Run `docker compose up -d` on a VPS, with `ADMIN_TOKEN` and `DOMAIN` set in `infra/.env`. The public proxy blocks `anvil_*`, `evm_*`, `hardhat_*`, `debug_*`, `eth_sendTransaction` and `eth_sign*`, rate-limits each IP, and lets only the admin token through for cheat methods. `infra/reset.sh` runs from a nightly cron and reloads `state/xlayer-fork.json`.
+See `infra/`. On a VPS, in `infra/`:
+
+```
+cp .env.example .env   # set ADMIN_TOKEN, DOMAIN and STATE_URL
+./fetch-state.sh       # pull the published snapshot into ../state (anvil --load-state)
+docker compose up -d
+```
+
+State dumps are gitignored (they are large), so they ship as **release assets**, not in the repo. Produce and publish one from a machine with anvil:
+
+```
+pnpm spike                                            # writes state/xlayer-fork.json
+gh release create fork-state state/xlayer-fork.json   # then set STATE_URL to that asset's URL
+```
+
+Without a snapshot the fork still boots, but anvil backfills from the public X Layer RPC on demand, which is slow and rate-limited — so `fetch-state.sh` is the recommended path. The public proxy blocks `anvil_*`, `evm_*`, `hardhat_*`, `debug_*`, `eth_sendTransaction` and `eth_sign*`, rate-limits each IP, and lets only the admin token through for cheat methods. `infra/reset.sh` runs from a nightly cron and reloads `state/xlayer-fork.json`.
