@@ -1,0 +1,98 @@
+name: 'Tapebox test'
+description: 'Run TAP-02 truth tables and beat sequences against a free X Layer fork (or a chain-free mock).'
+author: 'Tapebox'
+branding:
+  icon: 'cpu'
+  color: 'purple'
+
+inputs:
+  tapebox-version:
+    description: 'npm version or dist-tag of the tapebox CLI to run via npx.'
+    default: 'latest'
+  node-version:
+    description: 'Node.js version to set up.'
+    default: '20'
+  config:
+    description: 'Path to the tapebox config (default: tapebox.config.ts in working-directory).'
+    default: ''
+  mock:
+    description: 'Run against the in-memory mock SDK instead of a fork (no anvil, no network).'
+    default: 'false'
+  rpc:
+    description: 'Fork RPC to test against when mock is false.'
+    default: 'http://127.0.0.1:8545'
+  foundry-version:
+    description: 'Foundry toolchain version (provides anvil); used only when mock is false.'
+    default: 'stable'
+  fork-block:
+    description: 'Fork block number, used only as part of the state cache key.'
+    default: 'pinned'
+  working-directory:
+    description: 'Directory to run in.'
+    default: '.'
+  junit:
+    description: 'JUnit XML report output path.'
+    default: 'tapebox-results.xml'
+
+outputs:
+  junit:
+    description: 'Path to the JUnit XML report (always written).'
+    value: ${{ steps.run.outputs.junit }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    # Real fork only: install anvil and restore the committed/published snapshot so the fork
+    # starts in seconds instead of backfilling from the public X Layer RPC.
+    - if: ${{ inputs.mock != 'true' }}
+      uses: foundry-rs/foundry-toolchain@v1
+      with:
+        version: ${{ inputs.foundry-version }}
+    - if: ${{ inputs.mock != 'true' }}
+      uses: actions/cache@v4
+      with:
+        path: ${{ inputs.working-directory }}/state
+        key: tapebox-fork-${{ inputs.fork-block }}
+
+    - id: run
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        TAPEBOX_VERSION: ${{ inputs.tapebox-version }}
+        CONFIG: ${{ inputs.config }}
+        MOCK: ${{ inputs.mock }}
+        RPC: ${{ inputs.rpc }}
+        JUNIT: ${{ inputs.junit }}
+      run: |
+        set -uo pipefail
+        cli="tapebox@${TAPEBOX_VERSION}"
+        cfg=""
+        [ -n "$CONFIG" ] && cfg="--config $CONFIG"
+
+        # The report path is always exposed, even if the run fails.
+        echo "junit=$JUNIT" >> "$GITHUB_OUTPUT"
+
+        if [ "$MOCK" = "true" ]; then
+          npx --yes "$cli" test --mock $cfg --junit "$JUNIT"
+          exit $?
+        fi
+
+        # Start the fork in the background (loads ./state if the cache restored it).
+        npx --yes "$cli" up &
+        up_pid=$!
+
+        # Wait up to 60s for the fork RPC to answer.
+        for _ in $(seq 1 60); do
+          curl -fsS -X POST -H 'content-type: application/json' \
+            --data '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}' "$RPC" >/dev/null 2>&1 && break
+          sleep 1
+        done
+
+        npx --yes "$cli" test --rpc "$RPC" $cfg --junit "$JUNIT"
+        status=$?
+        kill "$up_pid" 2>/dev/null || true
+        exit $status

@@ -1,0 +1,10 @@
+{
+  "name": "@tapebox/action",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Person B's composite GitHub Action: run `tapebox test` against a free X Layer fork (or the mock) in CI.",
+  "scripts": {
+    "test": "vitest run"
+  }
+}
