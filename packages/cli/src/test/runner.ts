@@ -1,6 +1,6 @@
 import type { NetlistInput, TapeboxSdk } from '@tapebox/sdk';
 import type { Bits, Report, ReportCase, ReportSuite } from '@tapebox/shared';
-import { OP, type Op, decodeElements } from '@tapebox/tap02';
+import { OP, type Op, decodeElements, packBits, unpackBits } from '@tapebox/tap02';
 import type { Hex } from 'viem';
 import type { TapeboxConfig } from './config.js';
 
@@ -9,6 +9,7 @@ type ConfigCircuit = TapeboxConfig['tests'][number]['circuit'];
 const toBool = (b: 0 | 1 | boolean): boolean => b === true || b === 1;
 const eqBits = (a: boolean[], b: boolean[]): boolean =>
   a.length === b.length && a.every((x, i) => x === b[i]);
+const bitStr = (b: boolean[]): string => b.map((x) => (x ? 1 : 0)).join('') || '-';
 
 /** Positional signals get synthetic names so the report matches the website's named-bits schema. */
 const named = (prefix: string, bits: boolean[]): Bits =>
@@ -75,6 +76,35 @@ export async function runSuite(
           inputs: named('in', inBits),
           expected: named('out', expected),
           actual: named('out', outputs),
+        });
+      }
+      for (const [i, beat] of (t.beats ?? []).entries()) {
+        const c0 = Date.now();
+        const stateBits = beat.state.map(toBool);
+        const inBits = beat.in.map(toBool);
+        const expected = beat.out.map(toBool);
+        const r = await sdk.step(id, packBits(stateBits), packBits(inBits));
+        const actualOut = unpackBits(r.outputs, expected.length);
+        let pass = eqBits(actualOut, expected);
+        let message: string | undefined;
+        if (beat.newState) {
+          const expNext = beat.newState.map(toBool);
+          const actualNext = unpackBits(r.newState, expNext.length);
+          if (!eqBits(actualNext, expNext)) {
+            pass = false;
+            message = `next state expected ${bitStr(expNext)}, got ${bitStr(actualNext)}`;
+          }
+        }
+        cases.push({
+          name: `beat ${i} (state ${bitStr(stateBits)}, in ${bitStr(inBits)})`,
+          kind: 'beats',
+          status: pass ? 'passed' : 'failed',
+          durationMs: Date.now() - c0,
+          inputs: named('in', inBits),
+          expected: named('out', expected),
+          actual: named('out', actualOut),
+          beat: i,
+          ...(message ? { message } : {}),
         });
       }
       suites.push({

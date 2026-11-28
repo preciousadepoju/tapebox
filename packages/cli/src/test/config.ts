@@ -30,6 +30,21 @@ const testCase = z.object({
   circuit,
   /** Combinational checks: each row maps input bits to expected output bits. */
   truthTable: z.array(z.object({ in: z.array(bit), out: z.array(bit) })).optional(),
+  /**
+   * Stateful checks: each beat gives the latch state and inputs, and the expected outputs (and,
+   * optionally, the expected next state). Checked with step() — use the netlist circuit form for
+   * circuits with LATCH gates.
+   */
+  beats: z
+    .array(
+      z.object({
+        state: z.array(bit),
+        in: z.array(bit),
+        out: z.array(bit),
+        newState: z.array(bit).optional(),
+      }),
+    )
+    .optional(),
 });
 
 export const configSchema = z.object({
