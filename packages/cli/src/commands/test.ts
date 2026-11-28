@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import { createMockSdk, createTapeboxSdk } from '@tapebox/sdk';
-import { DEFAULT_FORK_PORT } from '@tapebox/shared';
+import { DEFAULT_FORK_PORT, FORK_BLOCK, xLayer } from '@tapebox/shared';
 import type { Command } from 'commander';
 import ora from 'ora';
 import pc from 'picocolors';
@@ -43,12 +43,19 @@ export function registerTest(program: Command) {
       const spin = ora(
         o.mock ? 'Running tests (mock SDK)' : `Running tests against ${rpc}`,
       ).start();
-      const report = await runSuite(sdk, config, '0.1.0').catch((e) => {
+      const report = await runSuite(sdk, config, {
+        version: '0.1.0',
+        mode: o.mock ? 'mock' : 'fork',
+        chainId: xLayer.id,
+        forkBlock: o.mock ? undefined : Number(FORK_BLOCK),
+      }).catch((e) => {
         spin.fail('Test run failed to start');
         throw e;
       });
-      if (report.failed === 0) spin.succeed('Tests complete');
-      else spin.fail(`${report.failed} of ${report.total} failed`);
+      const { passed, failed, skipped } = report.summary;
+      const total = passed + failed + skipped;
+      if (failed === 0) spin.succeed('Tests complete');
+      else spin.fail(`${failed} of ${total} failed`);
 
       console.log(`\n${toTerminal(report)}\n`);
 
@@ -61,6 +68,6 @@ export function registerTest(program: Command) {
         console.log(pc.dim(`  wrote ${[o.json, o.md, o.junit].filter(Boolean).join(', ')}`));
       }
 
-      if (report.failed > 0) process.exitCode = 1;
+      if (failed > 0) process.exitCode = 1;
     });
 }

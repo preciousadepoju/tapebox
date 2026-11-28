@@ -38,6 +38,9 @@ importers:
       '@tapebox/shared':
         specifier: workspace:*
         version: link:../../shared
+      '@tapebox/tap02':
+        specifier: workspace:*
+        version: link:../../packages/tap02
       next:
         specifier: ^16.4.6
         version: 16.4.6(@types/node@22.20.7)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)

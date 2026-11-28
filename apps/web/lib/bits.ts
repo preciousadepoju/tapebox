@@ -1,27 +1,16 @@
+import { packBits as packBitsTap, unpackBits as unpackBitsTap } from '@tapebox/tap02';
 import type { Hex } from 'viem';
 
 /**
- * TapeOut packs bits little-endian: byte k holds bits 8k..8k+7, LSB first.
- * So input 0 is bit 0 of byte 0 and input 8 is bit 0 of byte 1 (checked on the fork).
+ * Bit packing is sourced from @tapebox/tap02 (the vector-verified engine), so the web app and the
+ * chain always agree: byte k holds bits 8k..8k+7, LSB first; missing bytes read as zero.
  */
 export function packBits(bits: readonly boolean[]): Hex {
-  if (bits.length === 0) return '0x';
-  const bytes = new Uint8Array(Math.ceil(bits.length / 8));
-  bits.forEach((on, i) => {
-    if (on) bytes[i >> 3] |= 1 << (i & 7);
-  });
-  return `0x${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
+  return packBitsTap(bits as boolean[]);
 }
 
-/** Read `count` bits from packed bytes. Missing bytes read as zero, like the contract does. */
 export function unpackBits(hex: Hex, count: number): boolean[] {
-  const clean = hex.slice(2);
-  const out: boolean[] = [];
-  for (let i = 0; i < count; i++) {
-    const byte = Number.parseInt(clean.slice((i >> 3) * 2, (i >> 3) * 2 + 2) || '0', 16);
-    out.push(((byte >> (i & 7)) & 1) === 1);
-  }
-  return out;
+  return unpackBitsTap(hex, count);
 }
 
 /** Bits of an integer row index, LSB = bit 0. */
