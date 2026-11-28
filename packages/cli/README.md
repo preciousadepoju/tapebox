@@ -4,10 +4,11 @@ A free fork of X Layer mainnet for [TapeOut](https://github.com/TapeOutProtocol/
 real contracts, free test transistors, a test runner, and a circuit builder.
 
 ```bash
-npx tapebox up                      # local X Layer fork on :8545, dev accounts pre-funded
-npx tapebox fund 0xYourAddress      # free OKB + NAND/LATCH
-npx tapebox test --mock             # run tapebox.config.ts (no chain needed)
-npx tapebox inspect 0x00000002000003 --inputs 2 --table
+npm i -g @zevbuilds/tapebox         # or run any command with: npx @zevbuilds/tapebox <cmd>
+tapebox up                          # local X Layer fork on :8545, dev accounts pre-funded
+tapebox fund 0xYourAddress          # free OKB + NAND/LATCH
+tapebox test --mock                 # run tapebox.config.ts (no chain needed)
+tapebox inspect 0x00000002000003 --inputs 2 --table
 ```
 
 Requires Node 20+ and [Foundry](https://book.getfoundry.sh/getting-started/installation) (`anvil`)
