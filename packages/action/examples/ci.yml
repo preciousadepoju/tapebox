@@ -1,0 +1,24 @@
+# Sample workflow for a repo that uses Tapebox. Copy this to .github/workflows/tapebox.yml
+# in your own repo (it needs a tapebox.config.ts at the root). See ../README.md.
+name: tapebox
+on: [push, pull_request]
+
+jobs:
+  circuits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Tapebox tests
+        uses: preciousadepoju/tapebox/packages/action@main
+        with:
+          # mock: 'true'        # uncomment to run without a fork (no anvil)
+          junit: tapebox-results.xml
+
+      # JUnit shows up natively in the GitHub checks UI.
+      - name: Publish results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tapebox-results
+          path: tapebox-results.xml

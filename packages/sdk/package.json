@@ -1,0 +1,19 @@
+{
+  "name": "@tapebox/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Person B's Tapebox SDK: tapeOut(), eval() and step() with one API on the fork and on mainnet, plus a chain-free mock so the website can build against it from day one.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tapebox/shared": "workspace:*",
+    "@tapebox/tap02": "workspace:*",
+    "viem": "^2.21.54"
+  }
+}

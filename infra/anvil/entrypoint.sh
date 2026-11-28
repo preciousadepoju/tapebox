@@ -14,6 +14,10 @@ set -- --fork-url "$FORK_URL" --fork-block-number "$FORK_BLOCK" --chain-id 196 \
 if [ -f "$STATE" ]; then
   echo "loading state from $STATE"
   set -- "$@" --load-state "$STATE"
+else
+  echo "WARNING: no snapshot at $STATE — anvil will backfill from $FORK_URL on demand,"
+  echo "         which is slow and gets rate-limited. Run infra/fetch-state.sh on the host"
+  echo "         before 'docker compose up' to load a published snapshot."
 fi
 
 exec anvil "$@"
