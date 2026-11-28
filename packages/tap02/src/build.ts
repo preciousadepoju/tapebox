@@ -108,6 +108,23 @@ export class CircuitBuilder {
   }
 
   /**
+   * N-bit subtractor (`a - b`), least-significant bit first, via two's complement
+   * (`a + ~b + 1`). Returns the N difference wires and a `borrow` wire that is 1 when `a < b`.
+   */
+  rippleSub(a: number[], b: number[]): { diff: number[]; borrow: number } {
+    if (a.length !== b.length) throw new Error('rippleSub needs equal-width operands');
+    const diff: number[] = [];
+    let carry = ONE; // the +1 of two's complement
+    for (let i = 0; i < a.length; i++) {
+      const r = this.fullAdder(a[i], this.not(b[i]), carry);
+      diff.push(r.sum);
+      carry = r.carry;
+    }
+    // A carry-out means no borrow; borrow (a < b) is its inverse.
+    return { diff, borrow: this.not(carry) };
+  }
+
+  /**
    * Finish the circuit. The given wires become its outputs (lowest output bit first). TAP-02
    * requires the outputs to be the final wires, so each is buffered (double-NAND) to land
    * contiguously at the end regardless of where it was computed.
