@@ -16,12 +16,16 @@
   "dependencies": {
     "commander": "^12.1.0",
     "execa": "^9.5.2",
+    "jiti": "^2.4.2",
     "ora": "^8.1.1",
     "picocolors": "^1.1.1",
-    "viem": "^2.21.54"
+    "viem": "^2.21.54",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@tapebox/fork": "workspace:*",
-    "@tapebox/shared": "workspace:*"
+    "@tapebox/sdk": "workspace:*",
+    "@tapebox/shared": "workspace:*",
+    "@tapebox/tap02": "workspace:*"
   }
 }
