@@ -1,8 +1,22 @@
 {
   "name": "tapebox",
   "version": "0.1.0",
-  "description": "A free X Layer mainnet fork for TapeOut builders: real contracts, free test transistors, a test runner.",
+  "description": "A free X Layer mainnet fork for TapeOut builders: real contracts, free test transistors, a test runner and a circuit builder.",
   "type": "module",
+  "license": "MIT",
+  "homepage": "https://github.com/preciousadepoju/tapebox#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/preciousadepoju/tapebox.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/preciousadepoju/tapebox/issues"
+  },
+  "keywords": ["x-layer", "tapeout", "ethereum", "circuits", "anvil", "fork", "nand", "cli"],
+  "engines": {
+    "node": ">=20"
+  },
   "bin": {
     "tapebox": "./dist/index.js"
   },
@@ -11,7 +25,8 @@
     "build": "tsup",
     "dev": "tsx src/index.ts",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
     "commander": "^12.1.0",

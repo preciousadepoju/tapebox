@@ -1,0 +1,36 @@
+name: release
+# Publishes the `tapebox` CLI to npm when a v* tag is pushed (e.g. v0.1.0).
+# One-time setup: add an npm automation token as the repo secret NPM_TOKEN.
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build + test
+        run: |
+          pnpm --filter tapebox build
+          pnpm test
+
+      - name: Publish tapebox to npm
+        working-directory: packages/cli
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
