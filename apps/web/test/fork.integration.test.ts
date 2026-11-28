@@ -1,4 +1,4 @@
-import { type Hex, createWalletClient, http } from 'viem';
+import { http, type Hex, createWalletClient } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { describe, expect, it } from 'vitest';
 import { PUBLIC_RPC, forkChain } from '../lib/chain';
@@ -46,7 +46,11 @@ run('fork sandbox against a live fork', () => {
 
     for (let row = 0; row < 1 << compiled.inputs.length; row++) {
       const inBits = compiled.inputs.map((_, i) => ((row >> i) & 1) === 1);
-      const chain = await sandbox.eval({ circuitId, compiled, inputs: nameBits(compiled.inputs, inBits) });
+      const chain = await sandbox.eval({
+        circuitId,
+        compiled,
+        inputs: nameBits(compiled.inputs, inBits),
+      });
       const local = simulate(compiled.circuit, inBits);
       expect(orderBits(compiled.outputs, chain), `inputs ${inBits.map(Number).join('')}`).toEqual(
         local.outputs,
