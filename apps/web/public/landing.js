@@ -308,7 +308,7 @@ evalC();
 
 /* ---------- copy ---------- */
 $('#copy').addEventListener('click',async e=>{
-  try{await navigator.clipboard.writeText('npx tapebox up');e.target.textContent='Copied'}catch{e.target.textContent='Select it'}
+  try{await navigator.clipboard.writeText('npx @zevbuilds/tapebox up');e.target.textContent='Copied'}catch{e.target.textContent='Select it'}
   setTimeout(()=>e.target.textContent='Copy',1600);
 });
 

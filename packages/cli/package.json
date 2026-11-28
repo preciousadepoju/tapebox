@@ -1,5 +1,5 @@
 {
-  "name": "tapebox",
+  "name": "@zevbuilds/tapebox",
   "version": "0.1.0",
   "description": "A free X Layer mainnet fork for TapeOut builders: real contracts, free test transistors, a test runner and a circuit builder.",
   "type": "module",
@@ -21,6 +21,9 @@
     "tapebox": "./dist/index.js"
   },
   "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsx src/index.ts",

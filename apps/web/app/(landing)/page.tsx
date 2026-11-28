@@ -226,7 +226,7 @@ export default function Landing() {
                   </div>
                   <div className="cmd">
                     <code>
-                      <span>$</span> npx tapebox up
+                      <span>$</span> npx @zevbuilds/tapebox up
                     </code>
                     <button id="copy" type="button">
                       Copy

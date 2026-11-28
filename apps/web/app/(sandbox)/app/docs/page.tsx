@@ -117,8 +117,9 @@ await wallet.writeContract({
         <p>
           Put truth tables and beat sequences in{' '}
           <code className="font-mono">tapebox.config.ts</code> and run{' '}
-          <code className="font-mono">npx tapebox test</code>. The GitHub Action runs the same thing
-          on every pull request, and <A href="/app/reports">Reports</A> renders its JSON output.
+          <code className="font-mono">npx @zevbuilds/tapebox test</code>. The GitHub Action runs the
+          same thing on every pull request, and <A href="/app/reports">Reports</A> renders its JSON
+          output.
         </p>
         <Code>{`
 # .github/workflows/chips.yml
