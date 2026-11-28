@@ -98,6 +98,31 @@ describe('CircuitBuilder gates (verified against the simulator)', () => {
     ));
 });
 
+describe('rippleSub (N-bit)', () => {
+  for (const n of [1, 4]) {
+    it(`${n}-bit subtractor computes a - b and borrow for all inputs`, () => {
+      const b = circuit(2 * n);
+      const aw = Array.from({ length: n }, (_, i) => b.input(i));
+      const bw = Array.from({ length: n }, (_, i) => b.input(n + i));
+      const { diff, borrow } = b.rippleSub(aw, bw);
+      const c = b.build([...diff, borrow]); // n diff bits (lsb first) + borrow
+
+      const bitsOf = (x: number, w: number) =>
+        Array.from({ length: w }, (_, i) => ((x >> i) & 1) === 1);
+      const mask = (1 << n) - 1;
+      for (let x = 0; x < 1 << n; x++) {
+        for (let y = 0; y < 1 << n; y++) {
+          const out = evalBeat(c, [...bitsOf(x, n), ...bitsOf(y, n)]);
+          const gotDiff = out.slice(0, n).reduce((acc, bit, i) => acc + (bit ? 1 << i : 0), 0);
+          const gotBorrow = out[n];
+          expect(gotDiff, `${x} - ${y} (diff)`).toBe((x - y) & mask);
+          expect(gotBorrow, `${x} - ${y} (borrow)`).toBe(x < y);
+        }
+      }
+    });
+  }
+});
+
 describe('build()', () => {
   it('produces a tapeable circuit (outputs are the last wires)', () => {
     const b = circuit(2);
