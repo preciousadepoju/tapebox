@@ -1,7 +1,7 @@
 import type { Report } from '@tapebox/shared';
 import { validateReport } from '@tapebox/shared';
 import { describe, expect, it } from 'vitest';
-import { toJUnit, toJson, toMarkdown, toTerminal } from '../src/test/report.js';
+import { toHtml, toJUnit, toJson, toMarkdown, toTerminal } from '../src/test/report.js';
 
 const report: Report = {
   tool: 'tapebox',
@@ -70,5 +70,16 @@ describe('report formatters', () => {
 
   it('terminal prints a FAIL summary', () => {
     expect(toTerminal(report)).toMatch(/FAIL/);
+  });
+
+  it('html is a self-contained document with the results', () => {
+    const html = toHtml(report);
+    expect(html.startsWith('<!doctype html>')).toBe(true);
+    expect(html).not.toContain('http://'); // no external assets
+    expect(html).toContain('1 passed');
+    expect(html).toContain('1 failed');
+    expect(html).toContain('NAND');
+    expect(html).toContain('BROKEN');
+    expect(html).toContain('<table>');
   });
 });
