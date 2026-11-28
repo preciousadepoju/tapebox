@@ -69,6 +69,12 @@ importers:
         specifier: ^2.21.54
         version: 2.58.8(typescript@5.9.3)
 
+  packages/tap02:
+    dependencies:
+      viem:
+        specifier: ^2.21.54
+        version: 2.58.8(typescript@5.9.3)
+
   shared:
     dependencies:
       viem:

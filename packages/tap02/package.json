@@ -1,0 +1,17 @@
+{
+  "name": "@tapebox/tap02",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Person B's TAP-02 netlist encoder, well-formedness check and one-beat simulator. Pure TypeScript, needs no fork, checked against the official vectors.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "viem": "^2.21.54"
+  }
+}
